@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abbott FreeStyle Libre — Figma Workflow Audit</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.15);
+    --text: #1A1A18;
+    --text-secondary: #6B6B67;
+    --text-tertiary: #9B9B97;
+    --blue: #2563EB;
+    --blue-light: #EFF6FF;
+    --blue-text: #1E40AF;
+    --green: #16A34A;
+    --green-light: #F0FDF4;
+    --green-text: #166534;
+    --amber: #D97706;
+    --amber-light: #FFFBEB;
+    --amber-text: #92400E;
+    --red: #DC2626;
+    --red-light: #FEF2F2;
+    --red-text: #991B1B;
+    --purple: #7C3AED;
+    --purple-light: #F5F3FF;
+    --purple-text: #5B21B6;
+    --w1: #2563EB;
+    --w2: #16A34A;
+    --n3: #D97706;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+  .logo span { color: var(--text-secondary); font-weight: 400; }
+  .header-meta { font-size: 12px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; }
+
+  /* Nav */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+  }
+  .nav-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.on { color: var(--text); border-bottom-color: var(--text); }
+
+  /* Layout */
+  .main { max-width: 1100px; margin: 0 auto; padding: 32px 40px; }
+  .pane { display: none; }
+  .pane.on { display: block; }
+
+  /* Hero */
+  .hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .hero-tag { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; font-family: 'DM Mono', monospace; }
+  .hero h1 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 6px; }
+  .hero p { font-size: 13px; color: var(--text-secondary); max-width: 640px; }
+  .hero-pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .pill { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 99px; }
+  .pill-blue { background: var(--blue-light); color: var(--blue-text); }
+  .pill-green { background: var(--green-light); color: var(--green-text); }
+  .pill-amber { background: var(--amber-light); color: var(--amber-text); }
+  .pill-red { background: var(--red-light); color: var(--red-text); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+  .stat-n { font-size: 28px; font-weight: 600; letter-spacing: -.02em; line-height: 1; margin-bottom: 4px; }
+  .stat-l { font-size: 12px; color: var(--text-secondary); }
+
+  /* Project cards */
+  .proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .proj-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .proj-card-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .proj-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .proj-name { font-size: 13px; font-weight: 600; }
+  .proj-sub { font-size: 11px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; }
+  .proj-num { font-size: 32px; font-weight: 600; letter-spacing: -.03em; line-height: 1; margin-bottom: 4px; }
+  .proj-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+  .proj-insight { font-size: 12px; background: var(--bg); border-radius: var(--radius); padding: 10px 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Section */
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-tertiary); font-family: 'DM Mono', monospace; margin-bottom: 12px; margin-top: 28px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  /* Chart wrapper */
+  .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+  .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
+  .lsq { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Table */
+  .data-table { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; border-collapse: collapse; }
+  .data-table th { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); padding: 10px 16px; text-align: left; background: var(--bg); border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; }
+  .data-table td { font-size: 13px; padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg); }
+
+  /* Issue rows */
+  .issue-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; }
+  .issue-row { display: flex; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .issue-row:last-child { border-bottom: none; }
+  .issue-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .issue-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .issue-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-family: 'DM Mono', monospace; }
+  .issue-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Friction */
+  .friction-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; }
+  .friction-header { padding: 14px 18px; background: var(--red-light); border-bottom: 1px solid rgba(220,38,38,.12); display: flex; align-items: center; gap: 10px; }
+  .friction-num { font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--red-text); background: rgba(220,38,38,.1); padding: 2px 7px; border-radius: 4px; }
+  .friction-title { font-size: 13px; font-weight: 600; color: var(--red-text); }
+  .friction-body { padding: 16px 18px; }
+  .timeline { position: relative; padding-left: 20px; margin-bottom: 12px; }
+  .timeline::before { content: ''; position: absolute; left: 6px; top: 4px; bottom: 4px; width: 1px; background: var(--border-strong); }
+  .tl-item { position: relative; margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+  .tl-item:last-child { margin-bottom: 0; }
+  .tl-dot { position: absolute; left: -17px; top: 5px; width: 7px; height: 7px; border-radius: 50%; }
+  .tl-dot.r { background: #DC2626; }
+  .tl-dot.a { background: #D97706; }
+  .tl-dot.g { background: #16A34A; }
+  .tl-dot.b { background: #9B9B97; }
+  blockquote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 2px solid var(--border-strong); padding: 6px 12px; margin: 8px 0; line-height: 1.6; }
+  blockquote cite { font-style: normal; font-size: 11px; color: var(--text-tertiary); display: block; margin-top: 3px; font-family: 'DM Mono', monospace; }
+
+  /* Rec cards */
+  .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .rec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .rec-hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .rec-title { font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .prio-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+  .prio-crit { background: var(--red-light); color: var(--red-text); }
+  .prio-high { background: var(--amber-light); color: var(--amber-text); }
+  .prio-med { background: var(--green-light); color: var(--green-text); }
+  .rec-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .info-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .info-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+  .delta { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .delta-up { background: var(--red-light); color: var(--red-text); }
+
+  /* Author table */
+  .author-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .author-row:last-child { border-bottom: none; }
+  .author-name { color: var(--text-secondary); }
+  .author-count { font-weight: 600; }
+  .author-bar-wrap { flex: 1; margin: 0 16px; height: 4px; background: var(--bg); border-radius: 2px; }
+  .author-bar { height: 4px; border-radius: 2px; }
+
+  @media (max-width: 768px) {
+    .main { padding: 20px; }
+    .header { padding: 0 20px; }
+    .nav { padding: 0 20px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .proj-grid { grid-template-columns: 1fr; }
+    .rec-grid { grid-template-columns: 1fr; }
+    .g2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">Abbott FreeStyle Libre <span>/ Figma Workflow Audit</span></div>
+  </div>
+  <div class="header-meta">803 comments · 3 projects · May 2026</div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn on" onclick="sw('ov',this)">Overview</button>
+  <button class="nav-btn" onclick="sw('cmp',this)">Project comparison</button>
+  <button class="nav-btn" onclick="sw('pat',this)">Recurring patterns</button>
+  <button class="nav-btn" onclick="sw('fri',this)">Late-stage friction</button>
+  <button class="nav-btn" onclick="sw('rec',this)">Recommendations</button>
+</nav>
+
+<main class="main">
+
+<!-- OVERVIEW -->
+<div id="p-ov" class="pane on">
+  <div class="hero">
+    <div class="hero-tag">Figma comment audit — 3 files analyzed</div>
+    <h1>803 comments. One root cause.</h1>
+    <p>Strategic direction is being resolved in Figma rather than locked in the brief. Copy/messaging is the top category in every single project — and the absolute volume grows with each wave. This is a structural pattern, not a one-off.</p>
+    <div class="hero-pills">
+      <span class="pill pill-blue">Libre Assist Wave 1</span>
+      <span class="pill pill-green">Libre Assist Wave 2</span>
+      <span class="pill pill-amber">Nudges Phase 2</span>
+      <span class="pill pill-red">5 late-stage friction incidents</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n">803</div><div class="stat-l">Total comments across 3 files</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--blue)">~634</div><div class="stat-l">Client (Abbott) comments</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--green)">~169</div><div class="stat-l">Internal (Sumeru) comments</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--red)">236</div><div class="stat-l">Copy/messaging comments combined</div></div>
+  </div>
+
+  <div class="proj-grid">
+    <div class="proj-card">
+      <div class="proj-card-hdr">
+        <div class="proj-dot" style="background:var(--w1)"></div>
+        <div>
+          <div class="proj-name">Libre Assist Wave 1</div>
+          <div class="proj-sub">3 journeys · Mar–Apr 2025</div>
+        </div>
+      </div>
+      <div class="proj-num">325</div>
+      <div class="proj-desc">top-level comments · 139 substantive client</div>
+      <div class="proj-insight">Compliance-heavy. 38% disclaimers. RA/Reimbursement/Clinical reviewers catching missed symbols repeatedly — wrong symbol used in 20+ instances across two waves.</div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-card-hdr">
+        <div class="proj-dot" style="background:var(--w2)"></div>
+        <div>
+          <div class="proj-name">Libre Assist Wave 2</div>
+          <div class="proj-sub">1 journey · Mar–Apr 2026</div>
+        </div>
+      </div>
+      <div class="proj-num">139</div>
+      <div class="proj-desc">top-level comments · ~119 substantive client</div>
+      <div class="proj-insight">Strategy-heavy. 45% copy/messaging debates. Disclaimer issues dropped 72% vs Wave 1 — learning happened. But late-stage strategic friction spiked with a documented confrontation in round 3.</div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-card-hdr">
+        <div class="proj-dot" style="background:var(--n3)"></div>
+        <div>
+          <div class="proj-name">Nudges Phase 2</div>
+          <div class="proj-sub">Multiple journeys · Apr–May 2026</div>
+        </div>
+      </div>
+      <div class="proj-num">339</div>
+      <div class="proj-desc">top-level comments · ~256 substantive client</div>
+      <div class="proj-insight">Most complex file. New issue class: Libre Support scope (20 global comments). VAST accuracy (18 comments). Copy length a cross-channel concern spanning email and SMS.</div>
+    </div>
+  </div>
+
+  <div class="section-label">Comment categories — all three projects</div>
+  <div class="chart-wrap">
+    <div class="chart-title">Category volume per project</div>
+    <div class="chart-sub">Copy/messaging dominates in every file. New categories emerge in Nudges P2.</div>
+    <div style="position:relative;height:280px">
+      <canvas id="c-ov" role="img" aria-label="Grouped bar chart: category volumes across 3 projects">Category volumes across projects.</canvas>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="lsq" style="background:var(--w1)"></div>Wave 1</div>
+      <div class="legend-item"><div class="lsq" style="background:var(--w2)"></div>Wave 2</div>
+      <div class="legend-item"><div class="lsq" style="background:var(--n3)"></div>Nudges P2</div>
+    </div>
+  </div>
+
+  <div class="section-label">The evolution across projects</div>
+  <div class="issue-list">
+    <div class="issue-row">
+      <span class="issue-badge pill-blue">Wave 1</span>
+      <div>
+        <div class="issue-title">Compliance-first profile</div>
+        <div class="issue-body">RA, Reimbursement, and Clinical reviewers dominated the feedback — wrong symbols, missing floating disclaimers, duplicate disclaimer language. The team was learning the reviewer requirements for a new product in its first wave.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge pill-green">Wave 2</span>
+      <div>
+        <div class="issue-title">Strategy-first profile — compliance learning happened</div>
+        <div class="issue-body">Disclaimer issues dropped 72%. But strategic alignment became the new friction: 54 copy/messaging comments debating voucher vs non-voucher positioning, sensor vs no-sensor messaging, Wave 2 awareness/consideration framework. And a new failure mode: late-stage strategic feedback in the final Veeva approval round.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge pill-amber">Nudges P2</span>
+      <div>
+        <div class="issue-title">New issue class: program scope confusion</div>
+        <div class="issue-body">20 comments globally flagged by ILO (Libre Support) and jamie.moxey explicitly stating LS cannot help with cost/coverage, sensor issues, or prescriptions. 18 comments about VAST accuracy — team promised what the program cannot deliver. Both were brief-stage gaps, not design errors.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECT COMPARISON -->
+<div id="p-cmp" class="pane">
+  <div class="section-label">Category shift — all three projects</div>
+  <div class="chart-wrap">
+    <div class="chart-title">Horizontal category comparison</div>
+    <div class="chart-sub">Copy/messaging grows with each project. New categories (program scope, VAST accuracy) appear only in Nudges P2.</div>
+    <div style="position:relative;height:320px">
+      <canvas id="c-cmp" role="img" aria-label="Horizontal grouped bar chart comparing categories per project">Horizontal category comparison.</canvas>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="lsq" style="background:var(--w1)"></div>Wave 1</div>
+      <div class="legend-item"><div class="lsq" style="background:var(--w2)"></div>Wave 2</div>
+      <div class="legend-item"><div class="lsq" style="background:var(--n3)"></div>Nudges P2</div>
+    </div>
+  </div>
+
+  <div class="section-label">Author activity — who's driving feedback per project</div>
+  <div class="chart-wrap">
+    <div class="chart-title">Comment volume by author group</div>
+    <div class="chart-sub">Marina Saldanha goes from 12 comments in Wave 1 to 198 in Nudges P2. ILO and jamie.moxey are net new in Nudges P2.</div>
+    <div style="position:relative;height:200px">
+      <canvas id="c-authors" role="img" aria-label="Stacked bar chart: author distribution per project">Author distribution per project.</canvas>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="lsq" style="background:var(--w1)"></div>Derek</div>
+      <div class="legend-item"><div class="lsq" style="background:var(--w2)"></div>Marina / Saldanha</div>
+      <div class="legend-item"><div class="lsq" style="background:var(--n3)"></div>hetnesh / ILO / jamie</div>
+      <div class="legend-item"><div class="lsq" style="background:#B4B2A9"></div>Others</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="info-card">
+      <h3>Signal-to-noise ratio</h3>
+      <p>Wave 1: ~58% signal (100 comments are coordination pings, status updates, acknowledgments that belong in Workfront). Wave 2: ~100% signal — hetnesh and Derek leave dense substantive comments. Nudges P2: mixed — Marina's 198 comments include many strategic notes that should be brief-stage decisions.</p>
+    </div>
+    <div class="info-card">
+      <h3>New issues unique to Nudges P2</h3>
+      <p><strong>Libre Support scope confusion</strong> — 20 comments. <strong>VAST accuracy</strong> — 18 comments. <strong>Copy length (email + SMS)</strong> — 15+ comments. <strong>"Don't acknowledge we know they aren't using"</strong> — 6 comments flagged by ILO, Marina, and Derek independently. All four are brief-stage gaps.</p>
+    </div>
+  </div>
+
+  <div class="section-label">Notable author changes between projects</div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Author</th><th>Wave 1</th><th>Wave 2</th><th>Nudges P2</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td style="font-weight:500">Derek</td><td>142</td><td>51</td><td>76</td><td style="color:var(--text-secondary);font-size:12px">Primary Abbott client contact. Strategic direction + RA relay.</td></tr>
+      <tr><td style="font-weight:500">Marina / Saldanha</td><td>12</td><td>27</td><td style="font-weight:600;color:var(--red)">198 <span class="delta delta-up">+1550%</span></td><td style="color:var(--text-secondary);font-size:12px">Abbott strategy lead. Now highest volume reviewer by far.</td></tr>
+      <tr><td style="font-weight:500">hetnesh.khurana</td><td>3</td><td style="font-weight:600;color:var(--amber)">41</td><td>—</td><td style="color:var(--text-secondary);font-size:12px">RA/Reimbursement/Clinical relay. Primary compliance conduit in W2.</td></tr>
+      <tr><td style="font-weight:500">ILO (jamie.moxey)</td><td>13</td><td>—</td><td style="font-weight:600">41 + 6</td><td style="color:var(--text-secondary);font-size:12px">Libre Support representative. Net new in Nudges P2.</td></tr>
+      <tr><td style="font-weight:500">Maria Laura</td><td>67</td><td>15</td><td>3</td><td style="color:var(--text-secondary);font-size:12px">Internal Sumeru. Mostly coordination pings — exclude from substantive count.</td></tr>
+      <tr><td style="font-weight:500">Gul-e Rana</td><td>20</td><td>5</td><td>2</td><td style="color:var(--text-secondary);font-size:12px">Internal Sumeru. Mix of status updates and internal clarifications.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- RECURRING PATTERNS -->
+<div id="p-pat" class="pane">
+  <div class="section-label">Issues appearing across all 3 projects — highest prevention priority</div>
+  <div class="issue-list">
+    <div class="issue-row">
+      <span class="issue-badge pill-red">All 3 projects</span>
+      <div>
+        <div class="issue-title">Copy/messaging resolved in Figma instead of the brief</div>
+        <div class="issue-meta">W1: 43 · W2: 54 · Nudges P2: 139 · Total: 236 comments — growing with each project</div>
+        <div class="issue-body">Strategic direction (what the email should say, how to frame the benefit, what the CTA should drive) is being worked out through Figma comments. The brief is not doing enough work upstream. This is the root cause of the majority of comment volume and the primary driver of late-stage friction.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge pill-red">All 3 projects</span>
+      <div>
+        <div class="issue-title">Image / audience mismatch — wrong person shown for audience segment</div>
+        <div class="issue-meta">W1: food image inconsistency · W2: teenagers in Medicare email · Nudges P2: Medicare-age woman for VAST, former Abbott employee in image</div>
+        <div class="issue-body">Caught visually by reviewers in every project but never caught in the QA process before client review. In Nudges P2, Marina flagged that a Libre Support photo contained a former Abbott employee who had left the company — a significant brand risk. An image brief checklist (audience segment, age range, verified stock image) would prevent this.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge pill-red">All 3 projects</span>
+      <div>
+        <div class="issue-title">Links / CTAs — destination undefined, wrong, or misleading</div>
+        <div class="issue-meta">W1: 15 link errors · W2: 4 link questions · Nudges P2: 9 CTA questions · Total: 28</div>
+        <div class="issue-body">In Wave 1, the Libre app URL and MFS app URL were swapped and reached the Veeva PDF stage undetected. In later projects, "where does this link go?" appears repeatedly — CTAs with no confirmed destination URL. A simple CTA → URL → confirmed column in the QA checklist would catch both failure modes.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Issues appearing in Wave 1 + Wave 2</div>
+  <div class="issue-list">
+    <div class="issue-row">
+      <span class="issue-badge" style="background:var(--blue-light);color:var(--blue-text)">W1 + W2</span>
+      <div>
+        <div class="issue-title">Wrong disclaimer symbol — asterisk (*) used where double cross (‡‡) required</div>
+        <div class="issue-meta">W1: 13 comments · W2: 7 comments · 20 total across Libre Assist</div>
+        <div class="issue-body">The predicted glucose impact disclaimer must use ‡‡, not *. The asterisk is already used for a different disclaimer in these emails — RA flags the ambiguity every single time. Highest-ROI plugin rule: scan text nodes in footer/disclaimer areas for * near "predicted" language. A disclaimer symbol reference frame pinned to each Figma file would prevent this at the designer stage.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge" style="background:var(--blue-light);color:var(--blue-text)">W1 + W2</span>
+      <div>
+        <div class="issue-title">"Libre Assist is a feature only in the Libre app" — wrong phrasing</div>
+        <div class="issue-meta">W1: 7 comments · W2: 5 comments · 12 total</div>
+        <div class="issue-body">Variants seen: "the newest feature in the Libre app", "a feature of the Libre app", "the latest feature". All rejected by RA. Only the exact phrase "a feature only in the Libre app" is approved. Plugin rule: flag any occurrence of "Libre Assist" not followed by this exact phrase. Also flag "new" or "newest" adjacent to Libre Assist — RA permits "new" for only 6 months post-launch.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Issues unique to Nudges Phase 2</div>
+  <div class="issue-list">
+    <div class="issue-row">
+      <span class="issue-badge pill-amber">Nudges P2 only</span>
+      <div>
+        <div class="issue-title">Libre Support scope confusion — 20 global comments</div>
+        <div class="issue-meta">ILO left 8 comments labeled "GLOBAL COMMENT" — applied across entire file</div>
+        <div class="issue-body">Libre Support cannot help with: cost/coverage questions, sensor issues, copay card, Medicaid, prescriptions. Sumeru directed users to LS for all of these. ILO's language was explicit and repeated: "REMOVE LIBRE SUPPORT from copay card. GLOBAL COMMENT." This is a brief-stage gap — no program scope reference was provided before design began.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge pill-amber">Nudges P2 only</span>
+      <div>
+        <div class="issue-title">VAST accuracy — 18 comments about over-promising capabilities</div>
+        <div class="issue-meta">Conflicting understanding between Sumeru brief and Derek's confirmed scope</div>
+        <div class="issue-body">Sumeru's brief included VAST as a program that could help patients get a prescription and arrange home delivery. Derek corrected this in Figma: "CONFIRMED: VAST specialists cannot help you get a prescription from your HCP." Barbara cited a strategy call where this was discussed. The disagreement surfaced in a Figma thread requiring 18 comments to resolve — copy changes across multiple email variants followed.</div>
+      </div>
+    </div>
+    <div class="issue-row">
+      <span class="issue-badge pill-amber">Nudges P2 only</span>
+      <div>
+        <div class="issue-title">Acknowledging non-use in copy — "creepy" per ILO, Marina, Derek</div>
+        <div class="issue-meta">6 independent flags from 3 different reviewers</div>
+        <div class="issue-body">Copy was written that made it obvious the brand was tracking sensor non-use. ILO: "it's a little creepy if it is accurate." Marina: "since you were last here for me has a negative connotation." Derek: "we can't assume they haven't been using a different CGM." All three flagged independently — a tone/voice brief gap, not a design error.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LATE-STAGE FRICTION -->
+<div id="p-fri" class="pane">
+  <div class="hero" style="border-left: 4px solid var(--red);">
+    <div class="hero-tag" style="color:var(--red-text)">Documented friction incidents — 5 across 3 projects</div>
+    <h1>The brief is too thin. Figma is absorbing the cost.</h1>
+    <p>Late-stage feedback friction occurs when strategic or structural feedback arrives in the final Veeva approval round. It creates timeline pressure, team tension, and rework that costs 2–3x more than the same change in round 1. Five incidents are documented below — all share the same structural cause.</p>
+  </div>
+
+  <div class="friction-card">
+    <div class="friction-header">
+      <span class="friction-num">Incident 1</span>
+      <div class="friction-title">Wave 2 · Gul-e Rana vs Derek · Round 3 confrontation (most documented)</div>
+    </div>
+    <div class="friction-body">
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot g"></div>Rounds 1–2: Derek left broad copy direction feedback. Sumeru addressed it across multiple revision cycles.</div>
+        <div class="tl-item"><div class="tl-dot a"></div>Round 3 (final Veeva approval): Derek left new structural feedback — teenager image in Medicare email, CTA misalignment, "Experience the difference" copy unclear.</div>
+        <div class="tl-item"><div class="tl-dot r"></div>Gul-e Rana formally pushed back: "Some of this feedback appears like it could have been shared last week. As this is the approval round, addressing these comments last day before Veeva submission impacts how we're able to implement feedback efficiently."</div>
+        <div class="tl-item"><div class="tl-dot r"></div>Derek acknowledged missing it: "I make an assumption that our email creative is developed with a solid, well thought out strategy... as I was viewing these emails more broadly, I realized there was a miss between strategy and creative execution."</div>
+        <div class="tl-item"><div class="tl-dot b"></div>Resolution: Sumeru asked to implement feedback same-day before Veeva deadline. Tension unresolved. No agreed round-gate framework to reference.</div>
+      </div>
+      <blockquote>"For the round just before Veeva approval, we generally expect more minimal, targeted comments to help ensure a smooth and timely progression. Team has implemented feedback. Let's get these into Veeva like we did for GDI and if you have any further feedback on implemented changes that can be handled during Veeva reviews as well."<cite>— Gul-e Rana, order_id 88, Wave 2</cite></blockquote>
+    </div>
+  </div>
+
+  <div class="friction-card">
+    <div class="friction-header">
+      <span class="friction-num">Incident 2</span>
+      <div class="friction-title">Wave 1 · "Snap→Predict→Know Step 3" recurring across 8+ comments</div>
+    </div>
+    <div class="friction-body">
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot r"></div>The same Step 3 "Know" copy issue flagged as "Universal comment — feedback not addressed from previous round" across 8+ pinned comments in the Onboarding journey.</div>
+        <div class="tl-item"><div class="tl-dot r"></div>The fix was marked "Updated" internally but kept reappearing — the update was applied in one email variant but not propagated to all other instances of the same module.</div>
+        <div class="tl-item"><div class="tl-dot b"></div>Root cause: No shared module tracking. A comment on a shared element was resolved locally, not globally.</div>
+      </div>
+      <blockquote>"Feedback not addressed from previous round"<cite>— Derek, appearing across 8+ Wave 1 Onboarding comments</cite></blockquote>
+    </div>
+  </div>
+
+  <div class="friction-card">
+    <div class="friction-header">
+      <span class="friction-num">Incident 3</span>
+      <div class="friction-title">Wave 1 · App store URL swap caught at Veeva, not in Figma</div>
+    </div>
+    <div class="friction-body">
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot r"></div>The Libre app URL and MFS app URL were swapped — Libre buttons linked to MFS and vice versa. Neither design nor internal QA caught it.</div>
+        <div class="tl-item"><div class="tl-dot r"></div>Caught by reviewers viewing the Veeva PDF — meaning the error passed through the entire design and review workflow undetected.</div>
+        <div class="tl-item"><div class="tl-dot b"></div>Required emergency correction at submission stage, adding delay to campaign launch.</div>
+      </div>
+      <blockquote>"Links updated to Libre App"<cite>— Maria Laura, after the error was caught at Veeva PDF stage</cite></blockquote>
+    </div>
+  </div>
+
+  <div class="friction-card">
+    <div class="friction-header">
+      <span class="friction-num">Incident 4</span>
+      <div class="friction-title">Nudges P2 · VAST scope disagreement surfaced in Figma (18 comments)</div>
+    </div>
+    <div class="friction-body">
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot r"></div>Sumeru's brief included VAST as a program that could help patients get a prescription and arrange home delivery — a core part of the email strategy for cost/coverage journeys.</div>
+        <div class="tl-item"><div class="tl-dot r"></div>Derek pinned a comment: "CONFIRMED: VAST specialists cannot help you get a prescription from your HCP." This contradicted multiple emails already designed.</div>
+        <div class="tl-item"><div class="tl-dot a"></div>Barbara pushed back citing a strategy call. A debate followed in Figma thread replies across multiple frames.</div>
+        <div class="tl-item"><div class="tl-dot b"></div>18 comments referencing VAST scope inaccuracies required copy changes across multiple email variants at a late stage.</div>
+      </div>
+      <blockquote>"Our latest understanding from our call with the VAST team was that the VAST agent contacts the doctor and if they're eligible, gets the Rx and then arranges home delivery. Is this not still the case?"<cite>— barbara</cite></blockquote>
+      <blockquote>"It's never been in scope for VAST to help Medicare customers get a Rx. I confirmed this with the program owner."<cite>— Derek, reply</cite></blockquote>
+    </div>
+  </div>
+
+  <div class="friction-card">
+    <div class="friction-header">
+      <span class="friction-num">Incident 5</span>
+      <div class="friction-title">Nudges P2 · ILO's 20 "Libre Support cannot do this" global comments</div>
+    </div>
+    <div class="friction-body">
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot r"></div>Sumeru designed multiple emails directing users to Libre Support for cost/coverage questions, sensor issues, and copay card questions. All three are outside LS scope.</div>
+        <div class="tl-item"><div class="tl-dot r"></div>ILO left 8 comments explicitly labeled "GLOBAL COMMENT" — meaning fix applies to the entire file, not just the specific frame.</div>
+        <div class="tl-item"><div class="tl-dot r"></div>4 separate emails had to be revised to remove or replace LS CTAs. jamie.moxey confirmed the scope boundaries in reply threads.</div>
+        <div class="tl-item"><div class="tl-dot b"></div>Root cause: No program scope reference document shared with Sumeru at brief stage. Designers assigned support CTAs based on assumed logic rather than confirmed scope.</div>
+      </div>
+      <blockquote>"Libre Support does not do cost and coverage. GLOBAL COMMENT." / "Please remove Libre Support from this message. LS doesn't do sensor issues. Do not link with Sensor issues. GLOBAL COMMENT."<cite>— ILO, Nudges Phase 2</cite></blockquote>
+    </div>
+  </div>
+
+  <div class="section-label">What these incidents have in common</div>
+  <div class="g2">
+    <div class="info-card">
+      <h3>Structural causes</h3>
+      <p>Strategy not locked before design begins — brief assumptions get tested in Figma. Program scope (Libre Support, VAST, Customer Care) not documented and shared with Sumeru upfront. No round-gating agreement — no shared definition of what type of feedback is appropriate per review round. No shared module tracking — fixes applied locally, not propagated globally.</p>
+    </div>
+    <div class="info-card">
+      <h3>What it costs Sumeru</h3>
+      <p>Rework in the final round costs 2–3x more time than the same change in round 1. It creates adversarial dynamics — the Wave 2 incident is fully documented and unresolved. It absorbs senior designer time on copy edits and CTA debates rather than design decisions. It shifts accountability for strategic alignment onto Sumeru's execution team rather than the Abbott brief owners.</p>
+    </div>
+  </div>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div id="p-rec" class="pane">
+  <div class="hero">
+    <div class="hero-tag">Prioritized recommendations — 9 actions</div>
+    <h1>Fix upstream, automate downstream.</h1>
+    <p>The highest-leverage changes are not in the QA plugin — they are in the brief and the review process. The plugin catches what slips through. The brief prevents it from slipping in the first place.</p>
+  </div>
+
+  <div class="section-label">Priority 1 — prevent before Figma (upstream)</div>
+  <div class="rec-grid">
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Program scope reference card — required brief attachment</div>
+        <span class="prio-badge prio-crit">Critical</span>
+      </div>
+      <div class="rec-body">A one-page document mapping: Libre Support (what it does / does not cover), VAST (scope, eligibility, what agents can confirm), Customer Care (replacements, billing), copay card (who can use it, what it guarantees). Would have prevented 38 comments in Nudges P2 alone. Required deliverable from Abbott before Sumeru begins any cost/coverage email project.</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Round gate definition — agreed with Derek before round 1 opens</div>
+        <span class="prio-badge prio-crit">Critical</span>
+      </div>
+      <div class="rec-body">Round 1 = strategy and copy direction. Round 2 = detailed copy edits, image feedback, module-level changes. Round 3 = regulatory/compliance only (RA, Reimbursement, Clinical). Needs formal agreement with Derek and Marina — not assumed. The Wave 2 confrontation had no framework to reference. This single change would reduce late-stage friction by an estimated 60%.</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Disclaimer symbol reference frame — pinned to every Figma file</div>
+        <span class="prio-badge prio-crit">Critical</span>
+      </div>
+      <div class="rec-body">A frame at the top of every file: symbol → disclaimer text → which claim it applies to. 20 comments across two waves were about asterisk vs ‡‡. If a designer sees the approved mapping in the same file before starting work, this error drops to zero. Takes 30 minutes to build once, used for every project.</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Image brief checklist — per email, per audience segment</div>
+        <span class="prio-badge prio-crit">Critical</span>
+      </div>
+      <div class="rec-body">Before selecting any image: Who is this email for? Age range? Insurance type? Verified stock image (not internal Abbott employee)? 10+ image/audience mismatch comments across all 3 files. This checklist sits in the QA spreadsheet, not in Figma. Takes 5 minutes per email to fill in.</div>
+    </div>
+  </div>
+
+  <div class="section-label">Priority 2 — plugin automation (catch before client review)</div>
+  <div class="rec-grid">
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Flag "Libre Assist" not followed by approved phrase</div>
+        <span class="prio-badge prio-high">High</span>
+      </div>
+      <div class="rec-body">Rule: any occurrence of "Libre Assist" must be followed by "a feature only in the Libre app". Flags: "the newest feature", "a feature of", "the latest feature". 12 comments across W1 and W2. Simple string match — highest-ROI plugin rule.</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Flag asterisk (*) symbols in disclaimer zones near predicted language</div>
+        <span class="prio-badge prio-high">High</span>
+      </div>
+      <div class="rec-body">20 comments across Libre Assist alone. Plugin scans footer/disclaimer text nodes for * and flags if "predicted" language appears anywhere in the email. Designer must confirm intentional use. Prevents the single most consistently flagged RA symbol error.</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Flag "track" adjacent to Libre Assist / glucose language</div>
+        <span class="prio-badge prio-high">High</span>
+      </div>
+      <div class="rec-body">RA consistently rejects "track" — Libre Assist shows predicted and actual impact, it doesn't track. "See" is the approved replacement. 3 instances in Wave 2. Simple rule: flag "track" within 20 words of "Libre Assist" or "glucose".</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">CTA link audit column in QA checklist</div>
+        <span class="prio-badge prio-high">High</span>
+      </div>
+      <div class="rec-body">28 link-related comments across all 3 files. Add a column to the existing QA spreadsheet: CTA label → destination URL → confirmed Y/N. Would have caught the URL swap that reached Veeva in Wave 1 and the "where does this link go?" questions that appear in every file.</div>
+    </div>
+  </div>
+
+  <div class="section-label">Priority 3 — workflow (reduce coordination noise)</div>
+  <div class="rec-grid">
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Move handoff pings and status updates out of Figma into Workfront</div>
+        <span class="prio-badge prio-med">Medium</span>
+      </div>
+      <div class="rec-body">Approximately 30–40% of internal comments across all files are review request pings ("@Derek please review"), status updates ("Updated", "Done"), and acknowledgments. These belong in Workfront tasks. Moving them out reduces noise by ~35% and makes substantive feedback easier to find in Figma.</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <div class="rec-title">Emailify pilot — 2 templates, measure HTML output vs ESP requirements</div>
+        <span class="prio-badge prio-med">Medium</span>
+      </div>
+      <div class="rec-body">Link errors that reach Veeva are partly caused by manual handoff from Figma to the ESP (likely Salesforce Marketing Cloud). Emailify exports CTA links directly from Figma, making the URL audit programmatic. Test on 2 non-critical Nudges templates before committing to full rollout.</div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+function sw(id, btn) {
+  document.querySelectorAll('.pane').forEach(e => e.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('on'));
+  document.getElementById('p-' + id).classList.add('on');
+  btn.classList.add('on');
+  window.scrollTo(0, 0);
+  if (id === 'cmp' && !window._cmpDone) { buildCmpCharts(); window._cmpDone = true; }
+}
+
+const cats = ['Copy / messaging','Disclaimers','Design / layout','Images','Terminology','Links / CTAs','Program scope','VAST accuracy','Process'];
+const w1   = [43, 53,  0, 15,  0, 15,  0,  0,  6];
+const w2   = [54, 15, 11, 10, 10,  4,  0,  0,  9];
+const n3   = [139, 0, 19, 10, 22,  9, 20, 18, 19];
+
+const chartDefaults = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw}` } } },
+};
+
+new Chart(document.getElementById('c-ov'), {
+  type: 'bar',
+  data: {
+    labels: cats,
+    datasets: [
+      { label: 'Wave 1',    data: w1, backgroundColor: '#2563EB', borderRadius: 3, borderWidth: 0 },
+      { label: 'Wave 2',    data: w2, backgroundColor: '#16A34A', borderRadius: 3, borderWidth: 0 },
+      { label: 'Nudges P2', data: n3, backgroundColor: '#D97706', borderRadius: 3, borderWidth: 0 },
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11, family: 'DM Mono' }, color: '#9B9B97', maxRotation: 35 } },
+      y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11, family: 'DM Mono' }, color: '#9B9B97' }, beginAtZero: true }
+    }
+  }
+});
+
+function buildCmpCharts() {
+  new Chart(document.getElementById('c-cmp'), {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [
+        { label: 'Wave 1',    data: w1, backgroundColor: '#2563EB', borderRadius: 3, borderWidth: 0 },
+        { label: 'Wave 2',    data: w2, backgroundColor: '#16A34A', borderRadius: 3, borderWidth: 0 },
+        { label: 'Nudges P2', data: n3, backgroundColor: '#D97706', borderRadius: 3, borderWidth: 0 },
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      ...chartDefaults,
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11, family: 'DM Mono' }, color: '#9B9B97' }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { font: { size: 11, family: 'DM Mono' }, color: '#9B9B97' } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('c-authors'), {
+    type: 'bar',
+    data: {
+      labels: ['Wave 1', 'Wave 2', 'Nudges P2'],
+      datasets: [
+        { label: 'Derek',               data: [142, 51,  76], backgroundColor: '#2563EB', borderRadius: 3, borderWidth: 0 },
+        { label: 'Marina / Saldanha',   data: [ 12, 27, 198], backgroundColor: '#16A34A', borderRadius: 3, borderWidth: 0 },
+        { label: 'hetnesh / ILO / jamie', data: [16, 41,  47], backgroundColor: '#D97706', borderRadius: 3, borderWidth: 0 },
+        { label: 'Others',              data: [155, 20,  18], backgroundColor: '#B4B2A9', borderRadius: 3, borderWidth: 0 },
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12, family: 'DM Mono' }, color: '#9B9B97' }, stacked: true },
+        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11, family: 'DM Mono' }, color: '#9B9B97' }, stacked: true, beginAtZero: true }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
